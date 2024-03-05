@@ -12,6 +12,31 @@ from geopy.distance import geodesic
 from geopy.point import Point
 from streamlit_folium import st_folium
 
+coords = {
+    "New York": (40.7128, -74.0060),
+    "London": (51.5074, -0.1278),
+    "Tokyo": (35.6895, 139.6917),
+    "Paris": (48.8566, 2.3522),
+    "Hong Kong": (22.3193, 114.1694),
+    "Singapore": (1.3521, 103.8198),
+    "Shanghai": (31.2304, 121.4737),
+    "Dubai": (25.276987, 55.296249),
+    "Beijing": (39.9042, 116.4074),
+    "Sydney": (-33.8688, 151.2093),
+    "Los Angeles": (34.0522, -118.2437),
+    "Berlin": (52.5200, 13.4050),
+    "Moscow": (55.7558, 37.6173),
+    "Chicago": (41.8781, -87.6298),
+    "Toronto": (43.6532, -79.3832),
+    "Mumbai": (19.0760, 72.8777),
+    "San Francisco": (37.7749, -122.4194),
+    "Madrid": (40.4168, -3.7038),
+    "São Paulo": (-23.5505, -46.6333),
+    "Istanbul": (41.0082, 28.9784),
+    "Barcelona": (41.3851, 2.1734),
+    "Mexico City": (19.4326, -99.1332),
+}
+
 def scrape_yahoo_finance_news():
     #url = "https://www.nytimes.com/section/climate"
     url_reuters = "https://www.reuters.com/sustainability/"
@@ -52,6 +77,8 @@ def scrape_nyt_news():
         print(response.content)
         print("Failed to fetch data from New York Times")
 
+def find_start_coords(city):
+    return coords.get(city)
 
 header = st.container()
 flight_simulator = st.container()
@@ -60,6 +87,7 @@ test = st.container()
 
 
 with header:
+    #st.set_page_config(page_title="My Streamlit App", page_icon=":sunrise:", layout="wide", theme={"base":"light"})
     st.title("Carbon Footprint Diet Analysis 🌱")
     st.header("What is the comparative carbon footprint of plant-based diets versus meat-based diets?")
     st.markdown("What is the global impact on the planet? 🌎 Our approach to this challenge involved the use of various data sources.")
@@ -86,14 +114,14 @@ with header:
 with flight_simulator:
     st.header("Flight Simulator ✈️")
     st.subheader("Find the equivalent km flight!")
-    st.selectbox('Select start location:', ['Barcelona','New York', 'London'])
+    city_name = st.selectbox('Select a city as a start location:', sorted(list(coords.keys())))
     st.selectbox('Select timeframe:', ['1 year','1 month', '5 years'])
-    start_coords = (41.3851, 2.1734)  # Example start coordinates (Barcelona)
+    start_coords = find_start_coords(city_name)
     bearing = 0  # Example bearing (North)
     bearing_plant = 15
 
     # Initialize a map centered around the start location
-    m = folium.Map(location=[41.3851, 2.1734], zoom_start=5)
+    m = folium.Map(location=[start_coords[0], start_coords[1]], zoom_start=4)
 
     # Example distances for demonstration
     equivalent_flight_distance_meat = 1000  # Example distance for meat diet
@@ -124,7 +152,7 @@ with environmental_news:
     list_of_headlines = []
     news_headlines = scrape_nyt_news()
     st.subheader("📰 Keep up with climate change news!")
-    selected_value = st.slider('Slide to select number of headlines', min_value=1, max_value=len(news_headlines))
+    selected_value = st.slider('Slide to select number of headlines to view', min_value=1, max_value=len(news_headlines))
     
     if news_headlines:
         for headline in news_headlines[6:6+selected_value]:
