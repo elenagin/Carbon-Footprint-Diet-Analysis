@@ -11,6 +11,7 @@ from folium.plugins import PolyLineTextPath
 from geopy.distance import geodesic
 from geopy.point import Point
 from streamlit_folium import st_folium
+import altair as alt
 
 coords = {
     "New York": (40.7128, -74.0060),
@@ -36,23 +37,13 @@ coords = {
     "Barcelona": (41.3851, 2.1734),
     "Mexico City": (19.4326, -99.1332),
 }
-
-def scrape_yahoo_finance_news():
-    #url = "https://www.nytimes.com/section/climate"
-    url_reuters = "https://www.reuters.com/sustainability/"
-
-    response = requests.get(url)
-    with open('response_content.txt', 'w') as file:
-        file.write(response.text)
-
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        headlines = soup.find_all('h3')
-        news_headlines = [headline.get_text() for headline in headlines]
-        return news_headlines
-    else:
-        print(response.content)
-        print("Failed to fetch data from Yahoo Finance")
+days_in_year = 365
+caloric_supply_df = pd.read_csv('daily-caloric-supply-derived-from-carbohydrates-protein-and-fat.csv').drop(['Code'], axis=1)
+caloric_supply_df.head(3)
+ghg_per_kg_df = pd.read_csv('ghg-per-kg-poore.csv').drop(['Code', "Year"], axis=1)
+ghg_per_kg_df.head(3)
+annual_ghg_emissions_meatbased = 0
+annual_ghg_emissions_plantbased = 0
 
 def scrape_nyt_news():
     url = "https://www.nytimes.com/section/climate"
@@ -80,59 +71,152 @@ def scrape_nyt_news():
 def find_start_coords(city):
     return coords.get(city)
 
+def calculate_average_ghg(items, ghg_factors_df):
+    if isinstance(items, str):  # If a single item is passed, make it a list
+        items = [items]
+    total_ghg = 0
+    count = 0
+    for item in items:
+        filtered_df = ghg_factors_df[ghg_factors_df['Entity'] == item]
+        if not filtered_df.empty:
+            ghg_per_kg = filtered_df['GHG emissions per kilogram (Poore & Nemecek, 2018)'].iloc[0]
+            total_ghg += ghg_per_kg
+            count += 1
+        else:
+            print(f"Warning: '{item}' not found in GHG factors dataset.")
+    return total_ghg / count if count > 0 else 0
+
+def calculate_carbon_footprint_plant():
+    daily_consumption_kg = {
+        'Fruits': 400 / 1000,
+        'Grains': 180 / 1000,
+        'Vegetables': 400 / 1000, 
+        'Legumes': 100 / 1000, 
+    }
+
+    annual_ghg_emissions_plantbased = 0
+    for food, daily_kg in daily_consumption_kg.items():
+        if food == 'Fruits':
+            fruits_ghg_avg = calculate_average_ghg(['Apples', 'Bananas', 'Berries & Grapes', 'Citrus Fruit', 'Other Fruit'], ghg_per_kg_df)
+            annual_ghg_emissions_plantbased += daily_kg * days_in_year * fruits_ghg_avg
+        elif food == 'Grains':
+            barley_ghg_per_kg = calculate_average_ghg(['Barley', 'Maize', 'Oatmeal', 'Rice', 'Wheat & Rye'], ghg_per_kg_df)
+            annual_ghg_emissions_plantbased += daily_kg * days_in_year * barley_ghg_per_kg
+        elif food == 'Vegetables':
+            vegetables_ghg_avg = calculate_average_ghg(['Tomatoes', 'Other Vegetables', 'Brassicas', 'Onions & Leeks'], ghg_per_kg_df)
+            annual_ghg_emissions_plantbased += daily_kg * days_in_year * vegetables_ghg_avg
+        elif food == 'Legumes':
+            # Using the approximate value directly, as before
+            legumes_ghg_avg = calculate_average_ghg(['Groundnuts', 'Other Pulses', 'Peas'], ghg_per_kg_df)
+            annual_ghg_emissions_plantbased += daily_kg * days_in_year * legumes_ghg_avg
+
+    return annual_ghg_emissions_plantbased
+
+def calculate_carbon_footprint_meat():
+    data_2020 = caloric_supply_df[caloric_supply_df['Year'] == 2020]
+    average_fat_intake = data_2020['Daily caloric intake per person from fat'].mean()
+    average_animal_protein_intake = data_2020['Daily caloric intake per person that comes from animal protein'].mean()
+    average_vegetal_protein_intake = data_2020['Daily caloric intake per person that comes from vegetal protein'].mean()
+    average_carbohydrates_intake = data_2020['Daily caloric intake per person from carbohydrates'].mean()
+
+    average_fat_intake_kg = (average_fat_intake / 9) / 1000
+    average_animal_protein_intake_kg = (average_animal_protein_intake / 4) / 1000
+    average_vegetal_protein_intake_kg = (average_vegetal_protein_intake / 4) / 1000
+    average_carbohydrates_intake_kg = (average_carbohydrates_intake / 4) / 1000
+
+    animal_protein_items = ['Beef (beef herd)', 'Poultry Meat', 'Pig Meat', 'Fish (farmed)', 'Eggs']
+    fat_items = ['Cheese']
+    vegetal_protein_items = ['Tofu', 'Other Pulses']
+    carbohydrates_items = ['Rice', 'Wheat & Rye', 'Potatoes', 'Cassava']
+
+    ghg_animal_protein_per_kg = calculate_average_ghg(animal_protein_items, ghg_per_kg_df)
+    ghg_fat_per_kg = calculate_average_ghg(fat_items, ghg_per_kg_df)
+    ghg_vegetal_protein_per_kg = calculate_average_ghg(vegetal_protein_items, ghg_per_kg_df)
+    ghg_carbohydrates_per_kg = calculate_average_ghg(carbohydrates_items, ghg_per_kg_df)
+
+    annual_fat_ghg_emissions = average_fat_intake_kg * days_in_year * ghg_fat_per_kg
+    average_daily_total_ghg = (average_fat_intake_kg * ghg_fat_per_kg + 
+                            average_animal_protein_intake_kg * ghg_animal_protein_per_kg + 
+                            average_vegetal_protein_intake_kg * ghg_vegetal_protein_per_kg + 
+                            average_carbohydrates_intake_kg * ghg_carbohydrates_per_kg)
+
+    annual_fat_ghg_emissions = average_fat_intake_kg * days_in_year * ghg_fat_per_kg
+    annual_carbohydrates_ghg_emissions = average_carbohydrates_intake_kg * days_in_year * ghg_carbohydrates_per_kg
+    annual_animal_protein_ghg_emissions = average_animal_protein_intake_kg * days_in_year * ghg_animal_protein_per_kg
+    annual_vegetal_protein_ghg_emissions = average_vegetal_protein_intake_kg * days_in_year * ghg_vegetal_protein_per_kg
+
+    annual_ghg_emissions_meatbased = (annual_fat_ghg_emissions + annual_carbohydrates_ghg_emissions +
+                                annual_animal_protein_ghg_emissions + annual_vegetal_protein_ghg_emissions)
+
+    return annual_ghg_emissions_meatbased
+
+
 header = st.container()
 flight_simulator = st.container()
-environmental_news = st.container()
+trends = st.container()
 endnotes = st.container()
 
-
 with header:
-    #st.set_page_config(page_title="My Streamlit App", page_icon=":sunrise:", layout="wide", theme={"base":"light"})
     st.title("Carbon Footprint Diet Analysis 🌱")
     st.header("What is the comparative carbon footprint of plant-based diets versus meat-based diets?")
     st.markdown("What is the global impact on the planet? 🌎 Our approach to this challenge involved the use of various data sources. _Please refer to \"Endnotes\" section below to see more details on sources and diets considered_.")
+    annual_ghg_emissions_meatbased = calculate_carbon_footprint_meat()
+    annual_ghg_emissions_plantbased = calculate_carbon_footprint_plant()
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Meat-based diet")
-        st.metric(label="Annual GHG emissions", value="🥩 1557 kg CO2")
+        st.metric(label="Annual GHG emissions", value=f"🥩 {format(annual_ghg_emissions_meatbased, '.1f')} kg CO2")
 
     with col2:
         st.subheader("Plant-based diet")
-        st.metric(label="Annual GHG emissions", value="🌱 479 kg CO2")
+        st.metric(label="Annual GHG emissions", value=f"🌱 {format(annual_ghg_emissions_plantbased, '.1f')} kg CO2", delta="3.2x more efficient vs meat")
 
-    labels = ['Meat-based Diet', 'Plant-based Diet']
-    ghg_emissions = [1557, 479]
-    fig, ax = plt.subplots()
-    #plt.figure(figsize=(5, 2))
-    plt.bar(labels, ghg_emissions, color=['crimson', 'limegreen'])
-    plt.title('Annual GHG Emissions: Meat-based vs Plant-based Diet')
-    plt.ylabel('GHG (kg CO2)')
-    st.pyplot(fig)
-    
-   
-    
+    ghg_emissions = [annual_ghg_emissions_meatbased, annual_ghg_emissions_plantbased]
+    diet_types = ['Meat-based Diet', 'Plant-based Diet']
+
+    chart_data = pd.DataFrame({
+        'Diet': diet_types,
+        'GHG (kg CO2)': ghg_emissions
+    })
+
+    bar_chart = alt.Chart(chart_data).mark_bar().encode(
+        x='Diet',
+        y='GHG (kg CO2)',
+        color=alt.condition(
+            alt.datum.Diet == 'Meat-based Diet', 
+            alt.value('crimson'),
+            alt.value('limegreen')
+        )
+    ).properties(
+        title='Annual GHG Emissions: Meat-based vs Plant-based Diet'
+    )
+    st.altair_chart(bar_chart, use_container_width=True)
+       
 with flight_simulator:
     st.write("")
-    st.header("Flight Simulator ✈️")
+    st.header("✈️ Flight Simulator")
+    st.markdown("Let's calculate the distance traveled by plane for one passenger 👤 in economy class.")
+    equivalent_flight_distance_meat = annual_ghg_emissions_meatbased / 0.2300351582119538 # in kgCO2e
+    equivalent_flight_distance_plant = annual_ghg_emissions_plantbased / 0.2300351582119538 # in kgCO2e
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Meat-based diet")
+        st.metric(label="Annual equivalent flight distance", value=f"🥩 {format(equivalent_flight_distance_meat, '.2f')} km")
+
+    with col2:
+        st.subheader("Plant-based diet")
+        st.metric(label="Annual equivalent flight distance", value=f"🌱 {format(equivalent_flight_distance_plant, '.2f')} km")
     st.subheader("Find the equivalent km flight!")
-    #st.selectbox('Select period:', ['Weekly', 'Monthly', 'Quarterly', 'Annual', 'Bi-Annual', '5 years', '10 years'])
-    city_name = st.selectbox('Select a city as a start location:', sorted(list(coords.keys())))
-    st.markdown("The following routes are the equivalent km travelled for 1 passenger based on the carbon footprint of each diet meaning that 1 person that did a one-way trip across route below emited the same carbon footprint as the diets indicated in the map.")
+    #st.selectbox('Select period:', ['Weekly', 'Monthly', 'Quarterly', 'Annual', 'Bi-Annual', '5 years', '10 years'])    
+    st.markdown("Let's simulate the equivalent travel routes on a map for one passenger in economy class based on the carbon footprint of each diet.")
+    city_name = st.selectbox('📍 Select a city as a start location:', sorted(list(coords.keys())))
     start_coords = find_start_coords(city_name)
     bearing = 0  # Example bearing (North)
     bearing_plant = 15
 
-    # Initialize a map centered around the start location
-    m = folium.Map(location=[start_coords[0], start_coords[1]], zoom_start=4)
-
-    # Example distances for demonstration
-    equivalent_flight_distance_meat = 1000  # Example distance for meat diet
-    equivalent_flight_distance_plant = 500  # Example distance for plant diet
-
-    # Calculate new end points based on distances
+    m = folium.Map(location=[start_coords[0], start_coords[1]], zoom_start=3)
     new_end_point_meat = geodesic(kilometers=equivalent_flight_distance_meat).destination(Point(*start_coords), bearing)
     end_coords_meat = (new_end_point_meat.latitude, new_end_point_meat.longitude)
-
     new_end_point_plant = geodesic(kilometers=equivalent_flight_distance_plant).destination(Point(*start_coords), bearing_plant)
     end_coords_plant = (new_end_point_plant.latitude, new_end_point_plant.longitude)
 
@@ -141,16 +225,58 @@ with flight_simulator:
     folium.Marker(end_coords_meat, popup='End for Meat Eaters').add_to(m)
     route_meat = folium.PolyLine(locations=[start_coords, end_coords_meat], color='crimson').add_to(m)
     PolyLineTextPath(route_meat, '     Meat Eaters', repeat=False, offset=-10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
-
     folium.Marker(end_coords_plant, popup='End for Vegetarians').add_to(m)
     route_plant = folium.PolyLine(locations=[start_coords, end_coords_plant], color='limegreen').add_to(m)
     PolyLineTextPath(route_plant, '     Vegetarian', repeat=False, offset=10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
-
-    # Display the map in Streamlit
     st_folium(m, width=725, height=500)
 
-st.write("")    
-with environmental_news:
+
+st.write("")  
+with trends:
+    st.header("📈 Diet trends worldwide")
+    st.markdown("Diets have changed significantly over the last 60 years, showing a rise in fat 🧀 and animal 🍗 protein calories, especially in the United States 🇺🇸, and an increase in vegetal 🫛 protein in China, highlighting potential areas for further dietary shift research. Carbohydrate 🍞 trends vary by country, suggesting influences from culture, economy, or policy.")
+    entities = ['United States', 'China', 'United Kingdom', 'France', 'Russia', 'Mexico', 'Japan', 'Spain']
+    fig, ax = plt.subplots(1, 4, figsize=(20, 6), dpi=100)
+    colors = plt.cm.tab20(np.linspace(0, 1, len(entities)))
+
+    for i, entity in enumerate(entities):
+        entity_data = caloric_supply_df[caloric_supply_df['Entity'] == entity]
+        ax[0].plot(entity_data['Year'], entity_data['Daily caloric intake per person from fat'], label=entity, color=colors[i], linestyle='-')
+        ax[1].plot(entity_data['Year'], entity_data['Daily caloric intake per person that comes from animal protein'], label=entity, color=colors[i], linestyle='--')
+        ax[2].plot(entity_data['Year'], entity_data['Daily caloric intake per person that comes from vegetal protein'], label=entity, color=colors[i], linestyle='-.')
+        ax[3].plot(entity_data['Year'], entity_data['Daily caloric intake per person from carbohydrates'], label=entity, color=colors[i], linestyle=':')
+
+    titles = ['Daily Caloric Intake from Fat', 'Daily Caloric Intake from Animal Protein', 'Daily Caloric Intake from Vegetal Protein', 'Daily Caloric Intake from Carbohydrates']
+    for i in range(4):
+        ax[i].set_title(titles[i])
+        ax[i].set_xlabel('Year')
+        ax[i].set_ylabel('Calories')
+        ax[i].legend(frameon=False, loc='upper left')
+        ax[i].grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.tight_layout(pad=2.0)
+    st.pyplot(fig)
+    
+    st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
+    dietary_choices_df = pd.read_csv('dietary-choices-uk.csv')#.drop(['Code'], axis=1)
+    dietary_choices_df.head(3)
+    diet_types = ['Flexitarian', 'None of these', 'Plant-based / Vegan', 'Meat eater', 'Pescetarian', 'Vegetarian']
+    dietary_choices_df['Day'] = pd.to_datetime(dietary_choices_df['Day'])
+    df_grouped = dietary_choices_df.groupby('Day').sum().reset_index()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    color_palette = ["plum", "violet", "mediumpurple", "darkviolet", "darkmagenta", "indigo"]
+    df_grouped.plot(x='Day', y=diet_types, kind='bar', stacked=True, ax=ax, color=color_palette)
+
+    plt.title('Diet Types Over Time for Age Group 18-24 (Grouped by Date)')
+    plt.ylabel('Number of Individuals')
+    plt.xlabel('Month and Year')
+    plt.xticks(ticks=range(len(df_grouped['Day'])), labels=[date.strftime('%b %Y') for date in df_grouped['Day']], rotation=45)
+    plt.legend(title='Diet Types')
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    st.markdown("ℹ️ It is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
     list_of_headlines = []
     news_headlines = scrape_nyt_news()
     st.subheader("📰 Keep up with climate change news!")
@@ -168,12 +294,16 @@ with environmental_news:
             </div>
             """
             st.markdown(news_card_html, unsafe_allow_html=True)
-
-st.write("")    
+ 
+st.markdown(" ")
+st.markdown(" ")
 with endnotes:        
-    st.subheader("Endnotes")
-    st.write("Meat-based diet is blabla")
-    st.write("Plant-based diet is blabla")
-    st.subheader("We hope you enjoyed our simulator!")
-    st.text("Elena Ginebra and Anastasia Krivenkovskaya")
-
+    st.header("📝 Endnotes and Data Sources")
+    st.markdown("Distance traveled by plane for one passenger in economy class, using the [ADEME](https://www.ademe.fr/en/frontpage/) emission factor of 0.23 kilogram of carbon dioxide equivalent emitted per kilometer.")
+    st.markdown("Our data source for vegetarian diets: [Mayo Clinic](https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/vegetarian-diet/art-20046446)")
+    st.markdown("Our data source for the news is: [New York Times](https://www.nytimes.com/section/climate)")
+    st.markdown("Our data source for co2 emissions is: [Kaggle](https://www.kaggle.com/datasets/alessandrolobello/agri-food-co2-emission-dataset-forecasting-ml)")
+    st.markdown("Our data source for diet compositions is: [Our World in Data](https://ourworldindata.org/diet-compositions#all-charts)")
+    st.markdown("Our data source for the dietary choices is: [Our World in Data](https://ourworldindata.org/grapher/dietary-choices-uk  )")
+    st.subheader("💥 We hope you enjoyed our simulator!")
+    st.markdown("Elena Ginebra and Anastasia Krivenkovskaya")
