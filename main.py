@@ -90,7 +90,7 @@ with header:
     #st.set_page_config(page_title="My Streamlit App", page_icon=":sunrise:", layout="wide", theme={"base":"light"})
     st.title("Carbon Footprint Diet Analysis 🌱")
     st.header("What is the comparative carbon footprint of plant-based diets versus meat-based diets?")
-    st.markdown("What is the global impact on the planet? 🌎 Our approach to this challenge involved the use of various data sources.")
+    st.markdown("What is the global impact on the planet? 🌎 Our approach to this challenge involved the use of various data sources. _Please refer to \"Endnotes\" section below to see more details on sources and diets considered_.")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Meat-based diet")
@@ -173,6 +173,6 @@ with endnotes:
     st.subheader("Endnotes")
     st.write("Meat-based diet is blabla")
     st.write("Plant-based diet is blabla")
-    st.subheader("Hope you enjoyed our simulator!")
+    st.subheader("We hope you enjoyed our simulator!")
     st.text("Elena Ginebra and Anastasia Krivenkovskaya")
 
