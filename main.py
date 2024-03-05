@@ -39,9 +39,7 @@ coords = {
 }
 days_in_year = 365
 caloric_supply_df = pd.read_csv('daily-caloric-supply-derived-from-carbohydrates-protein-and-fat.csv').drop(['Code'], axis=1)
-caloric_supply_df.head(3)
 ghg_per_kg_df = pd.read_csv('ghg-per-kg-poore.csv').drop(['Code', "Year"], axis=1)
-ghg_per_kg_df.head(3)
 annual_ghg_emissions_meatbased = 0
 annual_ghg_emissions_plantbased = 0
 
@@ -150,6 +148,19 @@ def calculate_carbon_footprint_meat():
 
     return annual_ghg_emissions_meatbased
 
+def create_chart(data, y_field, title, color_scheme='tableau20'):
+    chart = alt.Chart(data).mark_line().encode(
+        x=alt.X('Year:O', axis=alt.Axis(title='Year')),
+        y=alt.Y(f'{y_field}:Q', axis=alt.Axis(title='Calories')),
+        color=alt.Color('Entity:N', scale=alt.Scale(scheme=color_scheme), legend=alt.Legend(title="Country")),
+        tooltip=['Entity', 'Year', y_field]
+    ).properties(
+        title=title,
+        width=300,
+        height=200
+    )
+    
+    return chart
 
 header = st.container()
 flight_simulator = st.container()
@@ -235,46 +246,52 @@ st.write("")
 with trends:
     st.header("📈 Diet trends worldwide")
     st.markdown("Diets have changed significantly over the last 60 years, showing a rise in fat 🧀 and animal 🍗 protein calories, especially in the United States 🇺🇸, and an increase in vegetal 🫛 protein in China, highlighting potential areas for further dietary shift research. Carbohydrate 🍞 trends vary by country, suggesting influences from culture, economy, or policy.")
+
     entities = ['United States', 'China', 'United Kingdom', 'France', 'Russia', 'Mexico', 'Japan', 'Spain']
-    fig, ax = plt.subplots(1, 4, figsize=(20, 6), dpi=100)
-    colors = plt.cm.tab20(np.linspace(0, 1, len(entities)))
+    filtered_data = caloric_supply_df[caloric_supply_df['Entity'].isin(entities)]
 
-    for i, entity in enumerate(entities):
-        entity_data = caloric_supply_df[caloric_supply_df['Entity'] == entity]
-        ax[0].plot(entity_data['Year'], entity_data['Daily caloric intake per person from fat'], label=entity, color=colors[i], linestyle='-')
-        ax[1].plot(entity_data['Year'], entity_data['Daily caloric intake per person that comes from animal protein'], label=entity, color=colors[i], linestyle='--')
-        ax[2].plot(entity_data['Year'], entity_data['Daily caloric intake per person that comes from vegetal protein'], label=entity, color=colors[i], linestyle='-.')
-        ax[3].plot(entity_data['Year'], entity_data['Daily caloric intake per person from carbohydrates'], label=entity, color=colors[i], linestyle=':')
+    fat_chart = create_chart(filtered_data, 'Daily caloric intake per person from fat', 'Daily Caloric Intake from Fat')
+    animal_protein_chart = create_chart(filtered_data, 'Daily caloric intake per person that comes from animal protein', 'Daily Caloric Intake from Animal Protein')
+    vegetal_protein_chart = create_chart(filtered_data, 'Daily caloric intake per person that comes from vegetal protein', 'Daily Caloric Intake from Vegetal Protein')
+    carbohydrates_chart = create_chart(filtered_data, 'Daily caloric intake per person from carbohydrates', 'Daily Caloric Intake from Carbohydrates')
 
-    titles = ['Daily Caloric Intake from Fat', 'Daily Caloric Intake from Animal Protein', 'Daily Caloric Intake from Vegetal Protein', 'Daily Caloric Intake from Carbohydrates']
-    for i in range(4):
-        ax[i].set_title(titles[i])
-        ax[i].set_xlabel('Year')
-        ax[i].set_ylabel('Calories')
-        ax[i].legend(frameon=False, loc='upper left')
-        ax[i].grid(True, which='both', linestyle='--', linewidth=0.5)
-    plt.tight_layout(pad=2.0)
-    st.pyplot(fig)
-    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.altair_chart(fat_chart, use_container_width=True)
+    with col2:
+        st.altair_chart(animal_protein_chart, use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.altair_chart(vegetal_protein_chart, use_container_width=True)
+    with col4:
+        st.altair_chart(carbohydrates_chart, use_container_width=True)
+
+
     st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
     dietary_choices_df = pd.read_csv('dietary-choices-uk.csv')#.drop(['Code'], axis=1)
-    dietary_choices_df.head(3)
     diet_types = ['Flexitarian', 'None of these', 'Plant-based / Vegan', 'Meat eater', 'Pescetarian', 'Vegetarian']
     dietary_choices_df['Day'] = pd.to_datetime(dietary_choices_df['Day'])
     df_grouped = dietary_choices_df.groupby('Day').sum().reset_index()
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    color_palette = ["plum", "violet", "mediumpurple", "darkviolet", "darkmagenta", "indigo"]
-    df_grouped.plot(x='Day', y=diet_types, kind='bar', stacked=True, ax=ax, color=color_palette)
+    df_long = df_grouped.melt('Day', var_name='Diet Type', value_name='Number of Individuals')
+    chart = alt.Chart(df_long).mark_bar().encode(
+        x=alt.X('monthdate(Day):O', title='Month and Year'),
+        y=alt.Y('sum(Number of Individuals):Q', title='Number of Individuals'),
+        color=alt.Color('Diet Type:N', scale=alt.Scale(scheme='purpleblue'), legend=alt.Legend(title="Diet Types")),
+        tooltip=[alt.Tooltip('monthdate(Day):T', title='Date'), 'Diet Type', 'Number of Individuals']
+    ).properties(
+        title='Diet Types Over Time for Age Group 18-24 (Grouped by Date)'
+    ).configure_axis(
+        labelAngle=-45
+    ).configure_legend(
+        titleFontSize=12,
+        labelFontSize=10
+    )
 
-    plt.title('Diet Types Over Time for Age Group 18-24 (Grouped by Date)')
-    plt.ylabel('Number of Individuals')
-    plt.xlabel('Month and Year')
-    plt.xticks(ticks=range(len(df_grouped['Day'])), labels=[date.strftime('%b %Y') for date in df_grouped['Day']], rotation=45)
-    plt.legend(title='Diet Types')
+    # Display the chart in Streamlit
+    st.altair_chart(chart, use_container_width=True)
 
-    plt.tight_layout()
-    st.pyplot(fig)
 
     st.markdown("ℹ️ It is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
     list_of_headlines = []
