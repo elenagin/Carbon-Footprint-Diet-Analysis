@@ -6,6 +6,11 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import folium
+from folium.plugins import PolyLineTextPath
+from geopy.distance import geodesic
+from geopy.point import Point
+from streamlit_folium import st_folium
 
 def scrape_yahoo_finance_news():
     #url = "https://www.nytimes.com/section/climate"
@@ -51,6 +56,7 @@ def scrape_nyt_news():
 header = st.container()
 flight_simulator = st.container()
 environmental_news = st.container()
+test = st.container()
 
 
 with header:
@@ -82,11 +88,37 @@ with flight_simulator:
     st.subheader("Find the equivalent km flight!")
     st.selectbox('Select start location:', ['Barcelona','New York', 'London'])
     st.selectbox('Select timeframe:', ['1 year','1 month', '5 years'])
-    df = pd.DataFrame(
-    np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4],columns=['lat', 'lon'])
+    start_coords = (41.3851, 2.1734)  # Example start coordinates (Barcelona)
+    bearing = 0  # Example bearing (North)
+    bearing_plant = 15
 
-    st.map(df)
-    
+    # Initialize a map centered around the start location
+    m = folium.Map(location=[41.3851, 2.1734], zoom_start=5)
+
+    # Example distances for demonstration
+    equivalent_flight_distance_meat = 1000  # Example distance for meat diet
+    equivalent_flight_distance_plant = 500  # Example distance for plant diet
+
+    # Calculate new end points based on distances
+    new_end_point_meat = geodesic(kilometers=equivalent_flight_distance_meat).destination(Point(*start_coords), bearing)
+    end_coords_meat = (new_end_point_meat.latitude, new_end_point_meat.longitude)
+
+    new_end_point_plant = geodesic(kilometers=equivalent_flight_distance_plant).destination(Point(*start_coords), bearing_plant)
+    end_coords_plant = (new_end_point_plant.latitude, new_end_point_plant.longitude)
+
+    # Add markers and routes to the map
+    folium.Marker(start_coords, popup='Start: Barcelona').add_to(m)
+    folium.Marker(end_coords_meat, popup='End for Meat Eaters').add_to(m)
+    route_meat = folium.PolyLine(locations=[start_coords, end_coords_meat], color='crimson').add_to(m)
+    PolyLineTextPath(route_meat, '     Meat Eaters', repeat=False, offset=-10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
+
+    folium.Marker(end_coords_plant, popup='End for Vegetarians').add_to(m)
+    route_plant = folium.PolyLine(locations=[start_coords, end_coords_plant], color='limegreen').add_to(m)
+    PolyLineTextPath(route_plant, '     Vegetarian', repeat=False, offset=10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
+
+    # Display the map in Streamlit
+    st_folium(m, width=725, height=500)
+
     
 with environmental_news:
     list_of_headlines = []
@@ -106,6 +138,7 @@ with environmental_news:
             </div>
             """
             st.markdown(news_card_html, unsafe_allow_html=True)
+
         
 st.subheader("Hope you enjoyed our simulator!")
 st.text("Elena Ginebra and Anastasia Krivenkovskaya, Elena Ginebra")

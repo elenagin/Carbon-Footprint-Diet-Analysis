@@ -5,3 +5,6 @@ requests
 bs4
 numpy
 matplotlib
+streamlit-folium
+geopy
+folium
