@@ -83,7 +83,7 @@ def find_start_coords(city):
 header = st.container()
 flight_simulator = st.container()
 environmental_news = st.container()
-test = st.container()
+endnotes = st.container()
 
 
 with header:
@@ -112,10 +112,11 @@ with header:
    
     
 with flight_simulator:
+    st.write("")
     st.header("Flight Simulator ✈️")
     st.subheader("Find the equivalent km flight!")
+    #st.selectbox('Select period:', ['Weekly', 'Monthly', 'Quarterly', 'Annual', 'Bi-Annual', '5 years', '10 years'])
     city_name = st.selectbox('Select a city as a start location:', sorted(list(coords.keys())))
-    st.selectbox('Select timeframe:', ['1 year','1 month', '5 years'])
     start_coords = find_start_coords(city_name)
     bearing = 0  # Example bearing (North)
     bearing_plant = 15
@@ -147,7 +148,7 @@ with flight_simulator:
     # Display the map in Streamlit
     st_folium(m, width=725, height=500)
 
-    
+st.write("")    
 with environmental_news:
     list_of_headlines = []
     news_headlines = scrape_nyt_news()
@@ -162,11 +163,16 @@ with environmental_news:
                 <a href="{headline['url']}" style="text-decoration: none; color: inherit;">
                     <h2 style="color: #333; font-size: 20px; margin: 0;">{headline['title']}</h2>
                 </a>
-                <p style="color: #777; font-size: 12px; margin: 10px 0 0;">New York Times - {datetime.now().strftime("%d %B")}</p>
+                <p style="color: #777; font-size: 12px; margin: 10px 0 0;">New York Times - Extracted on: {datetime.now().strftime("%d %B")}</p>
             </div>
             """
             st.markdown(news_card_html, unsafe_allow_html=True)
 
-        
-st.subheader("Hope you enjoyed our simulator!")
-st.text("Elena Ginebra and Anastasia Krivenkovskaya, Elena Ginebra")
+st.write("")    
+with endnotes:        
+    st.subheader("Endnotes")
+    st.write("Meat-based diet is blabla")
+    st.write("Plant-based diet is blabla")
+    st.subheader("Hope you enjoyed our simulator!")
+    st.text("Elena Ginebra and Anastasia Krivenkovskaya")
+
