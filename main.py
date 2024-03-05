@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 def scrape_yahoo_finance_news():
     #url = "https://www.nytimes.com/section/climate"
@@ -64,6 +65,15 @@ with header:
     with col2:
         st.subheader("Plant-based diet")
         st.metric(label="Annual GHG emissions", value="🌱 479 kg CO2")
+
+    labels = ['Meat-based Diet', 'Plant-based Diet']
+    ghg_emissions = [1557, 479]
+    fig, ax = plt.subplots()
+    #plt.figure(figsize=(5, 2))
+    plt.bar(labels, ghg_emissions, color=['crimson', 'limegreen'])
+    plt.title('Annual GHG Emissions: Meat-based vs Plant-based Diet')
+    plt.ylabel('GHG (kg CO2)')
+    st.pyplot(fig)
     
    
     
