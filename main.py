@@ -12,6 +12,7 @@ from geopy.distance import geodesic
 from geopy.point import Point
 from streamlit_folium import st_folium
 import altair as alt
+import math
 
 coords = {
     "New York": (40.7128, -74.0060),
@@ -240,6 +241,20 @@ with flight_simulator:
     route_plant = folium.PolyLine(locations=[start_coords, end_coords_plant], color='limegreen').add_to(m)
     PolyLineTextPath(route_plant, '     Vegetarian', repeat=False, offset=10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
     st_folium(m, width=725, height=500)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader(f"How many one-way trips have the equivalent carbon footprint from {city_name} to...?")
+        end_location = st.selectbox('📍 Select an end location:', sorted(list(coords.keys())))
+        end_location_coords = find_start_coords(end_location)
+
+    with col2:
+        from geopy.distance import geodesic
+        distance_km = geodesic(start_coords, end_location_coords).kilometers
+        trips_meat = distance_km / equivalent_flight_distance_meat
+        trips_plant = distance_km / equivalent_flight_distance_plant
+        st.metric(label="Meat-eaters", value=f"🥩 {math.ceil(trips_meat)} trip(s)")
+        st.metric(label="Plant-eaters", value=f"🌱 {math.ceil(trips_plant)} trip(s)")
+        
 
 
 st.write("")  
@@ -288,10 +303,7 @@ with trends:
         titleFontSize=12,
         labelFontSize=10
     )
-
-    # Display the chart in Streamlit
     st.altair_chart(chart, use_container_width=True)
-
 
     st.markdown("ℹ️ It is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
     list_of_headlines = []
