@@ -117,6 +117,7 @@ with flight_simulator:
     st.subheader("Find the equivalent km flight!")
     #st.selectbox('Select period:', ['Weekly', 'Monthly', 'Quarterly', 'Annual', 'Bi-Annual', '5 years', '10 years'])
     city_name = st.selectbox('Select a city as a start location:', sorted(list(coords.keys())))
+    st.markdown("The following routes are the equivalent km travelled for 1 passenger based on the carbon footprint of each diet meaning that 1 person that did a one-way trip across route below emited the same carbon footprint as the diets indicated in the map.")
     start_coords = find_start_coords(city_name)
     bearing = 0  # Example bearing (North)
     bearing_plant = 15
