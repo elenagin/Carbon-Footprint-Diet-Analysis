@@ -169,8 +169,8 @@ trends = st.container()
 endnotes = st.container()
 
 with header:
-    st.title("Carbon Footprint Diet Analysis 🌱")
-    st.header("What is the comparative carbon footprint of plant-based diets versus meat-based diets?")
+    st.title("Carbon Footprint 👣 Diet Analysis 🌱")
+    st.header("What is the comparative carbon footprint 👣 of plant-based diets versus meat-based diets?")
     st.markdown("What is the global impact on the planet? 🌎 Our approach to this challenge involved the use of various data sources. _Please refer to \"Endnotes\" section below to see more details on sources and diets considered_.")
     annual_ghg_emissions_meatbased = calculate_carbon_footprint_meat()
     annual_ghg_emissions_plantbased = calculate_carbon_footprint_plant()
@@ -219,8 +219,7 @@ with flight_simulator:
         st.subheader("Plant-based diet")
         st.metric(label="Annual equivalent flight distance", value=f"🌱 {format(equivalent_flight_distance_plant, '.2f')} km")
     st.subheader("Find the equivalent km flight!")
-    #st.selectbox('Select period:', ['Weekly', 'Monthly', 'Quarterly', 'Annual', 'Bi-Annual', '5 years', '10 years'])    
-    st.markdown("Let's simulate the equivalent travel routes on a map for one passenger in economy class based on the carbon footprint of each diet.")
+    st.markdown("Let's simulate the equivalent travel routes on a map for one passenger in economy class based on the carbon footprint 👣 of each diet.")
     city_name = st.selectbox('📍 Select a city as a start location:', sorted(list(coords.keys())))
     start_coords = find_start_coords(city_name)
     bearing = 0  # Example bearing (North)
@@ -241,19 +240,21 @@ with flight_simulator:
     route_plant = folium.PolyLine(locations=[start_coords, end_coords_plant], color='limegreen').add_to(m)
     PolyLineTextPath(route_plant, '     Vegetarian', repeat=False, offset=10, attributes={'font-weight': 'bold', 'font-size': '14'}).add_to(m)
     st_folium(m, width=725, height=500)
+    st.subheader(f"How many one-way trips have the equivalent carbon footprint 👣 from {city_name} to...?")
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader(f"How many one-way trips have the equivalent carbon footprint from {city_name} to...?")
         end_location = st.selectbox('📍 Select an end location:', sorted(list(coords.keys())))
         end_location_coords = find_start_coords(end_location)
+        years_to_analyse = st.slider('Slide to select years to analyse', min_value=1, max_value=100)
+        
 
     with col2:
         from geopy.distance import geodesic
         distance_km = geodesic(start_coords, end_location_coords).kilometers
         trips_meat = distance_km / equivalent_flight_distance_meat
         trips_plant = distance_km / equivalent_flight_distance_plant
-        st.metric(label="Meat-eaters", value=f"🥩 {math.ceil(trips_meat)} trip(s)")
-        st.metric(label="Plant-eaters", value=f"🌱 {math.ceil(trips_plant)} trip(s)")
+        st.metric(label="Meat-eaters", value=f"🥩 {math.ceil(trips_meat)*years_to_analyse} trip(s)")
+        st.metric(label="Plant-eaters", value=f"🌱 {math.ceil(trips_plant)*years_to_analyse} trip(s)")
         
 
 
@@ -281,6 +282,29 @@ with trends:
         st.altair_chart(vegetal_protein_chart, use_container_width=True)
     with col4:
         st.altair_chart(carbohydrates_chart, use_container_width=True)
+
+
+
+    """from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_squared_error, r2_score
+    import numpy as np"""
+
+    """X = caloric_supply_df.iloc[:, :-1]  # All columns except the last one as features
+    y = caloric_supply_df.iloc[:, -1]  # The last column as the target
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    lr = LinearRegression()
+    lr.fit(X_train, y_train)
+    y_pred = lr.predict(X_test)
+    r2 = r2_score(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+
+    print(f"R²: {r2}")
+    print(f"MSE: {mse}")
+
+    print(r2, mse)"""
+
+
 
 
     st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
