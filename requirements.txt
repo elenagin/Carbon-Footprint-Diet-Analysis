@@ -3,5 +3,4 @@ datetime
 pandas
 requests
 bs4
-json
 numpy
