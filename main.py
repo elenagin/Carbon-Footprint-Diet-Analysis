@@ -331,10 +331,10 @@ with st.spinner(text="Loading..."):
         diet_types = ['Flexitarian', 'None of these', 'Plant-based / Vegan', 'Meat eater', 'Pescetarian', 'Vegetarian']
         dietary_choices_df['Day'] = pd.to_datetime(dietary_choices_df['Day'])
         df_grouped = dietary_choices_df.groupby('Day').sum().reset_index()
-        prediction_card_html = """
+        prediction_card_html = f"""
             <div style="border-radius: 10px; background-color: #cad7e8; padding-top: 20px; padding-left: 20px; padding-bottom: 20px;">
                 <p style="color: black; font-size: large; margin: 0;">Predicted daily caloric intake from animal protein in 2030</p>
-                <p style="color: black; font-size: xx-large; margin: 0;">🥩 160.10 calories</p>
+                <p style="color: black; font-size: xx-large; margin: 0;">🥩 {format(prediction_2030[0], '.2f')} calories</p>
                 <p style="color: dimgray; font-size: small; margin: 0;">Predicted using Random Forest Regression 🌳</p>
             </div>
         """
