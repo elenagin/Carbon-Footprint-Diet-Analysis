@@ -436,3 +436,10 @@ with st.spinner(text="Loading..."):
         st.markdown("- Our data source for the dietary choices is: [Our World in Data](https://ourworldindata.org/grapher/dietary-choices-uk).")
         st.subheader("💥 We hope you enjoyed the simulator!")
         st.markdown("Elena Ginebra and Anastasia Krivenkovskaya")
+        # Add a copyright notice at the bottom of the page
+        st.markdown("""
+            <hr style="border:0.5px dash #f0f0f5;">
+            <p style="text-align: center; color: grey;">
+                &copy; 2024 Elena Ginebra. All rights reserved.
+            </p>
+            """, unsafe_allow_html=True)
