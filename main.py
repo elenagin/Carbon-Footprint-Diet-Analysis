@@ -229,12 +229,12 @@ with header:
     with col1:
         st.subheader("Meat-based diet")
         st.metric(label="Annual GHG emissions", value=f"🥩 {format(annual_ghg_emissions_meatbased, '.1f')} kg CO2")
-        st.caption("For a meat-based diet considering a daily consumption of 90gr of fat, animal protein 38gr, 44gr vegetal protein, and 436gr carbohydrates")
+        st.caption("For a meat-based diet considering a daily consumption of 90gr of fat, animal protein 38gr, 44gr vegetal protein, and 436gr carbohydrates. _Our World in Data._")
 
     with col2:
         st.subheader("Plant-based diet")
         st.metric(label="Annual GHG emissions", value=f"🌱 {format(annual_ghg_emissions_plantbased, '.1f')} kg CO2", delta=f"{format(annual_ghg_emissions_meatbased/annual_ghg_emissions_plantbased, '.1f')}x more efficient vs meat")
-        st.caption("Dietary guidelines for vegetarians consider a daily consumption of 312gr of Vegetables, Fruits 350gr, Grains 182gr, Dairy 720gr and Proteins 98gr")
+        st.caption("Dietary guidelines for vegetarians consider a daily consumption of 312gr of Vegetables, Fruits 350gr, Grains 182gr, Dairy 720gr and Proteins 98gr. _Mayo Clinic._")
     
     ghg_emissions = [annual_ghg_emissions_meatbased, annual_ghg_emissions_plantbased]
     diet_types = ['Meat-based Diet', 'Plant-based Diet']
