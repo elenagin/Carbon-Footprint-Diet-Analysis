@@ -42,6 +42,46 @@ coords = {
     "Istanbul": (41.0082, 28.9784),
     "Barcelona": (41.3851, 2.1734),
     "Mexico City": (19.4326, -99.1332),
+    "Bangkok": (13.7563, 100.5018),
+    "Cairo": (30.0444, 31.2357),
+    "Cape Town": (33.9249, 18.4241),
+    "Rio de Janeiro": (-22.9068, -43.1729),
+    "Buenos Aires": (-34.6037, -58.3816),
+    "Amsterdam": (52.3676, 4.9041),
+    "Seoul": (37.5665, 126.9780),
+    "Kuala Lumpur": (3.1390, 101.6869),
+    "Rome": (41.9028, 12.4964),
+    "Vienna": (48.2082, 16.3738),
+    "Prague": (50.0755, 14.4378),
+    "Lisbon": (38.7223, -9.1393),
+    "Oslo": (59.9139, 10.7522),
+    "Helsinki": (60.1699, 24.9384),
+    "Stockholm": (59.3293, 18.0686),
+    "Warsaw": (52.2297, 21.0122),
+    "Athens": (37.9838, 23.7275),
+    "Dublin": (53.3498, -6.2603),
+    "Brussels": (50.8503, 4.3517),
+    "Zurich": (47.3769, 8.5417),
+    "Istanbul": (41.0082, 28.9784),
+    "Jakarta": (-6.2088, 106.8456),
+    "Lagos": (6.5244, 3.3792),
+    "Lima": (-12.0464, -77.0428),
+    "Manila": (14.5995, 120.9842),
+    "Melbourne": (-37.8136, 144.9631),
+    "Moscow": (55.7558, 37.6173),
+    "Mumbai": (19.0760, 72.8777),
+    "Nairobi": (-1.286389, 36.817223),
+    "New Delhi": (28.6139, 77.2090),
+    "Osaka": (34.6937, 135.5023),
+    "Paris": (48.8566, 2.3522),
+    "Quito": (-0.180653, -78.467838),
+    "Riyadh": (24.7136, 46.6753),
+    "Santiago": (-33.4489, -70.6693),
+    "Seoul": (37.5665, 126.9780),
+    "Singapore": (1.3521, 103.8198),
+    "Sydney": (-33.8688, 151.2093),
+    "Taipei": (25.0330, 121.5654),
+    "Tokyo": (35.6895, 139.6917)
 }
 days_in_year = 365
 caloric_supply_df = pd.read_csv('daily-caloric-supply-derived-from-carbohydrates-protein-and-fat.csv').drop(['Code'], axis=1)
@@ -227,7 +267,7 @@ with st.spinner(text="Loading..."):
             st.metric(label="Annual equivalent flight distance", value=f"🌱 {format(equivalent_flight_distance_plant, '.2f')} km")
         st.subheader("Find the equivalent km flight!")
         st.markdown("Let's simulate the equivalent travel routes on a map for one passenger in economy class based on the carbon footprint 👣 of each diet.")
-        city_name = st.selectbox('📍 Select a city as a start location:', sorted(list(coords.keys())), index=21)
+        city_name = st.selectbox('📍 Select a city as a start location:', sorted(list(coords.keys())), index=50)
         start_coords = find_start_coords(city_name)
         bearing = 0  # Example bearing (North)
         bearing_plant = 15
@@ -250,7 +290,7 @@ with st.spinner(text="Loading..."):
         st.subheader(f"How many one-way trips have the equivalent carbon footprint 👣 from {city_name} to...?")
         col1, col2 = st.columns(2)
         with col1:
-            end_location = st.selectbox('📍 Select an end location:', sorted(list(coords.keys())))
+            end_location = st.selectbox('📍 Select an end location:', sorted(list(coords.keys())), index=3)
             end_location_coords = find_start_coords(end_location)
             years_to_analyse = st.slider('Slide to select years to analyse', min_value=1, max_value=100)
             
