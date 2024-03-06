@@ -213,7 +213,6 @@ with st.spinner(text="Loading..."):
         st.altair_chart(bar_chart, use_container_width=True)
         
     with flight_simulator:
-        st.write("")
         st.header("✈️ Flight Simulator")
         st.markdown("Let's calculate the distance traveled by plane for one passenger 👤 in economy class.")
         equivalent_flight_distance_meat = annual_ghg_emissions_meatbased / 0.2300351582119538 # in kgCO2e
@@ -324,6 +323,7 @@ with st.spinner(text="Loading..."):
         #st.caption('Predicted using Random Forest Regression 🌳')
         st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
         dietary_choices_df = pd.read_csv('dietary-choices-uk.csv').drop(['Code'], axis=1)
+        dietary_choices_df = dietary_choices_df[dietary_choices_df['Entity'] == 'All adults']
         dietary_choices_df['Flexitarian'] = dietary_choices_df['Flexitarian'].astype(int)
         dietary_choices_df['Plant-based / Vegan'] = dietary_choices_df['Plant-based / Vegan'].astype(int)
         dietary_choices_df['Pescetarian'] = dietary_choices_df['Pescetarian'].astype(int)
@@ -352,7 +352,7 @@ with st.spinner(text="Loading..."):
             color=alt.Color('Diet Type:N', scale=alt.Scale(scheme='purpleblue'), legend=alt.Legend(title="Diet Types")),
             tooltip=[alt.Tooltip('monthdate(Day):T', title='Date'), 'Diet Type', 'Number of Individuals']
         ).properties(
-            title='Diet Types Over Time for Age Group 18-24 (Grouped by Date)'
+            title='Diet Types Over Time'
         ).configure_axis(
             labelAngle=-45
         ).configure_legend(
@@ -388,10 +388,10 @@ with st.spinner(text="Loading..."):
         st.header("📝 Endnotes and Data Sources")
         st.markdown("Distance traveled by plane for one passenger in economy class, using the [ADEME](https://www.ademe.fr/en/frontpage/) emission factor of 0.23 kilogram of carbon dioxide equivalent emitted per kilometer.")
         st.markdown("Prediction for 2023 trend in animal protein intake was created using a Random Forest Regressor 🌳 based on the latest caloric data of fat, carbohydrates and vegetal protein.")
-        st.markdown("Our data source for vegetarian diets: [Mayo Clinic](https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/vegetarian-diet/art-20046446)")
-        st.markdown("Our data source for the news is: [New York Times](https://www.nytimes.com/section/climate)")
-        st.markdown("Our data source for co2 emissions is: [Kaggle](https://www.kaggle.com/datasets/alessandrolobello/agri-food-co2-emission-dataset-forecasting-ml)")
-        st.markdown("Our data source for diet compositions is: [Our World in Data](https://ourworldindata.org/diet-compositions#all-charts)")
-        st.markdown("Our data source for the dietary choices is: [Our World in Data](https://ourworldindata.org/grapher/dietary-choices-uk  )")
+        st.markdown("Our data source for vegetarian diets: [Mayo Clinic](https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/vegetarian-diet/art-20046446).")
+        st.markdown("Our data source for the news is: [New York Times](https://www.nytimes.com/section/climate).")
+        st.markdown("Our data source for co2 emissions is: [Kaggle](https://www.kaggle.com/datasets/alessandrolobello/agri-food-co2-emission-dataset-forecasting-ml).")
+        st.markdown("Our data source for diet compositions is: [Our World in Data](https://ourworldindata.org/diet-compositions#all-charts).")
+        st.markdown("Our data source for the dietary choices is: [Our World in Data](https://ourworldindata.org/grapher/dietary-choices-uk).")
         st.subheader("💥 We hope you enjoyed our simulator!")
         st.markdown("Elena Ginebra and Anastasia Krivenkovskaya")
