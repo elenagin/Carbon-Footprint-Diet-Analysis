@@ -171,6 +171,8 @@ def create_chart(data, y_field, title, color_scheme='tableau20'):
 header = st.container()
 flight_simulator = st.container()
 trends = st.container()
+prediction = st.container()
+news = st.container()
 endnotes = st.container()
 
 with header:
@@ -288,7 +290,7 @@ with trends:
     with col4:
         st.altair_chart(carbohydrates_chart, use_container_width=True)
 
-
+with prediction:
     features = ['Year', 'Daily caloric intake per person that comes from vegetal protein',
                 'Daily caloric intake per person from fat', 'Daily caloric intake per person from carbohydrates']
     target = 'Daily caloric intake per person that comes from animal protein'
@@ -299,7 +301,7 @@ with trends:
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
     error = mean_absolute_error(y_test, predictions)
-    print(f"Mean Absolute Error: {error}")
+    #print(f"Mean Absolute Error: {error}")
     
     calories_from_vegetal_protein_2030 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person that comes from vegetal protein'].mean()
     calories_from_fat_2030 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person from fat'].mean()
@@ -315,8 +317,8 @@ with trends:
     prediction_2030 = model.predict(input_data_2030)
     
     calories_from_animal_protein_2020 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person that comes from animal protein'].mean()
-    print(f"Predicted daily caloric intake from animal protein in 2020: {calories_from_animal_protein_2020} calories")
-    print(f"Predicted daily caloric intake from animal protein in 2030: {prediction_2030[0]} calories")
+    #print(f"Predicted daily caloric intake from animal protein in 2020: {calories_from_animal_protein_2020} calories")
+    #print(f"Predicted daily caloric intake from animal protein in 2030: {prediction_2030[0]} calories")
     st.metric(label="Predicted daily caloric intake from animal protein in 2030", value=f"🥩 {format(prediction_2030[0], '.2f')} calories", delta=f'{(prediction_2030[0]-calories_from_animal_protein_2020)/calories_from_animal_protein_2020}')
 
     st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
@@ -347,6 +349,8 @@ with trends:
     st.altair_chart(chart, use_container_width=True)
 
     st.markdown("ℹ️ Trends suggest an increase in population and a high share of meat-based diets in future therefore it is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
+    
+with news:    
     list_of_headlines = []
     news_headlines = scrape_nyt_news()
     st.subheader("📰 Keep up with climate change news!")
