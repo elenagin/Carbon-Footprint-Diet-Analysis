@@ -427,7 +427,7 @@ with st.spinner(text="Loading..."):
     st.markdown(" ")
     with endnotes:        
         st.header("📝 Endnotes and Data Sources")
-        st.markdown("- Distance traveled by plane for one passenger in economy class, using the [ADEME](https://www.ademe.fr/en/frontpage/) emission factor of 0.23 kilogram of carbon dioxide equivalent emitted per kilometer.")
+        st.markdown("- Distance traveled by plane for one passenger in economy class, using the [ADEME](https://www.ademe.fr/en/frontpage/) emission factor of kilograms of carbon dioxide equivalent emitted per kilometer.")
         st.markdown("- Prediction for 2023 trend in animal protein intake was created using a Random Forest Regressor 🌳 based on the latest caloric data of fat, carbohydrates and vegetal protein.")
         st.markdown("- Our data source for vegetarian diets: [Mayo Clinic](https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/vegetarian-diet/art-20046446).")
         st.markdown("- Our data source for the news is: [New York Times](https://www.nytimes.com/section/climate).")
