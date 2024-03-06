@@ -393,5 +393,5 @@ with st.spinner(text="Loading..."):
         st.markdown("Our data source for co2 emissions is: [Kaggle](https://www.kaggle.com/datasets/alessandrolobello/agri-food-co2-emission-dataset-forecasting-ml).")
         st.markdown("Our data source for diet compositions is: [Our World in Data](https://ourworldindata.org/diet-compositions#all-charts).")
         st.markdown("Our data source for the dietary choices is: [Our World in Data](https://ourworldindata.org/grapher/dietary-choices-uk).")
-        st.subheader("💥 We hope you enjoyed our simulator!")
-        st.markdown("Elena Ginebra and Anastasia Krivenkovskaya")
+        st.subheader("💥 We hope you enjoyed the simulator!")
+        #st.markdown("Elena Ginebra and Anastasia Krivenkovskaya")
