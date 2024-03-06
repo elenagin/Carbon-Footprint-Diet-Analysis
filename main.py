@@ -135,7 +135,6 @@ def calculate_carbon_footprint_plant():
         'Fruits': 350 / 1000,
         'Grains': 182 / 1000,
         'Vegetables': 312 / 1000, 
-        'Legumes': 98 / 1000, 
         'Dairy': 720 / 1000, 
     }
 
@@ -150,10 +149,6 @@ def calculate_carbon_footprint_plant():
         elif food == 'Vegetables':
             vegetables_ghg_avg = calculate_average_ghg(['Tomatoes', 'Other Vegetables', 'Brassicas', 'Onions & Leeks'], ghg_per_kg_df)
             annual_ghg_emissions_plantbased += daily_kg * days_in_year * vegetables_ghg_avg
-        elif food == 'Legumes':
-            # Using the approximate value directly, as before
-            legumes_ghg_avg = calculate_average_ghg(['Groundnuts', 'Other Pulses', 'Peas'], ghg_per_kg_df)
-            annual_ghg_emissions_plantbased += daily_kg * days_in_year * legumes_ghg_avg
         elif food == 'Dairy':
             dairy_ghg_avg = calculate_average_ghg(['Milk'], ghg_per_kg_df)
             annual_ghg_emissions_plantbased += daily_kg * days_in_year * dairy_ghg_avg
