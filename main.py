@@ -13,6 +13,11 @@ from geopy.point import Point
 from streamlit_folium import st_folium
 import altair as alt
 import math
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
 
 coords = {
     "New York": (40.7128, -74.0060),
@@ -253,8 +258,8 @@ with flight_simulator:
         distance_km = geodesic(start_coords, end_location_coords).kilometers
         trips_meat = distance_km / equivalent_flight_distance_meat
         trips_plant = distance_km / equivalent_flight_distance_plant
-        st.metric(label="Meat-eaters", value=f"🥩 {math.ceil(trips_meat)*years_to_analyse} trip(s)")
-        st.metric(label="Plant-eaters", value=f"🌱 {math.ceil(trips_plant)*years_to_analyse} trip(s)")
+        st.metric(label="Meat-eaters", value=f"🥩 {math.ceil(trips_meat*years_to_analyse)} trip(s)")
+        st.metric(label="Plant-eaters", value=f"🌱 {math.ceil(trips_plant*years_to_analyse)} trip(s)")
         
 
 
@@ -263,7 +268,7 @@ with trends:
     st.header("📈 Diet trends worldwide")
     st.markdown("Diets have changed significantly over the last 60 years, showing a rise in fat 🧀 and animal 🍗 protein calories, especially in the United States 🇺🇸, and an increase in vegetal 🫛 protein in China, highlighting potential areas for further dietary shift research. Carbohydrate 🍞 trends vary by country, suggesting influences from culture, economy, or policy.")
 
-    entities = ['United States', 'China', 'United Kingdom', 'France', 'Russia', 'Mexico', 'Japan', 'Spain']
+    entities = ['United States', 'China', 'United Kingdom', 'France', 'Mexico', 'Japan', 'Spain']
     filtered_data = caloric_supply_df[caloric_supply_df['Entity'].isin(entities)]
 
     fat_chart = create_chart(filtered_data, 'Daily caloric intake per person from fat', 'Daily Caloric Intake from Fat')
@@ -284,34 +289,46 @@ with trends:
         st.altair_chart(carbohydrates_chart, use_container_width=True)
 
 
-
-    """from sklearn.model_selection import train_test_split
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import mean_squared_error, r2_score
-    import numpy as np"""
-
-    """X = caloric_supply_df.iloc[:, :-1]  # All columns except the last one as features
-    y = caloric_supply_df.iloc[:, -1]  # The last column as the target
+    features = ['Year', 'Daily caloric intake per person that comes from vegetal protein',
+                'Daily caloric intake per person from fat', 'Daily caloric intake per person from carbohydrates']
+    target = 'Daily caloric intake per person that comes from animal protein'
+    X = caloric_supply_df[features]
+    y = caloric_supply_df[target]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    lr = LinearRegression()
-    lr.fit(X_train, y_train)
-    y_pred = lr.predict(X_test)
-    r2 = r2_score(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-
-    print(f"R²: {r2}")
-    print(f"MSE: {mse}")
-
-    print(r2, mse)"""
-
-
-
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    error = mean_absolute_error(y_test, predictions)
+    print(f"Mean Absolute Error: {error}")
+    
+    calories_from_vegetal_protein_2030 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person that comes from vegetal protein'].mean()
+    calories_from_fat_2030 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person from fat'].mean()
+    calories_from_carbohydrates_2030 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person from carbohydrates'].mean()
+    
+    #Make a prediction for 2030 using the model
+    input_data_2030 = pd.DataFrame({
+        'Year': ['2030'],
+        'Daily caloric intake per person that comes from vegetal protein': [calories_from_vegetal_protein_2030],
+        'Daily caloric intake per person from fat': [calories_from_fat_2030],
+        'Daily caloric intake per person from carbohydrates': [calories_from_carbohydrates_2030]
+    })
+    prediction_2030 = model.predict(input_data_2030)
+    
+    calories_from_animal_protein_2020 = caloric_supply_df[caloric_supply_df['Year'] == caloric_supply_df['Year'].max()]['Daily caloric intake per person that comes from animal protein'].mean()
+    print(f"Predicted daily caloric intake from animal protein in 2020: {calories_from_animal_protein_2020} calories")
+    print(f"Predicted daily caloric intake from animal protein in 2030: {prediction_2030[0]} calories")
+    st.metric(label="Predicted daily caloric intake from animal protein in 2030", value=f"🥩 {format(prediction_2030[0], '.2f')} calories", delta=f'{(prediction_2030[0]-calories_from_animal_protein_2020)/calories_from_animal_protein_2020}')
 
     st.markdown("🥩 Meat-based diets still have the largest number of individuals in 2023. As the population naturally increases, our carbon emissions can only get worse 👎🏽.")
     dietary_choices_df = pd.read_csv('dietary-choices-uk.csv')#.drop(['Code'], axis=1)
+    dietary_choices_df['Flexitarian'] = dietary_choices_df['Flexitarian'].astype(int)
+    dietary_choices_df['Plant-based / Vegan'] = dietary_choices_df['Plant-based / Vegan'].astype(int)
+    dietary_choices_df['Pescetarian'] = dietary_choices_df['Pescetarian'].astype(int)
+    dietary_choices_df['Vegetarian'] = dietary_choices_df['Vegetarian'].astype(int)
     diet_types = ['Flexitarian', 'None of these', 'Plant-based / Vegan', 'Meat eater', 'Pescetarian', 'Vegetarian']
     dietary_choices_df['Day'] = pd.to_datetime(dietary_choices_df['Day'])
     df_grouped = dietary_choices_df.groupby('Day').sum().reset_index()
+    
 
     df_long = df_grouped.melt('Day', var_name='Diet Type', value_name='Number of Individuals')
     chart = alt.Chart(df_long).mark_bar().encode(
@@ -329,7 +346,7 @@ with trends:
     )
     st.altair_chart(chart, use_container_width=True)
 
-    st.markdown("ℹ️ It is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
+    st.markdown("ℹ️ Trends suggest an increase in population and a high share of meat-based diets in future therefore it is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
     list_of_headlines = []
     news_headlines = scrape_nyt_news()
     st.subheader("📰 Keep up with climate change news!")
