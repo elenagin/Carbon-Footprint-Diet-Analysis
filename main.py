@@ -221,7 +221,7 @@ endnotes = st.container()
 
 with header:
     st.title("Carbon Footprint 👣 Diet Analysis 🌱")
-    st.header("What is the comparative carbon footprint 👣 of plant-based diets versus meat-based diets globally 🌎?")
+    st.header("What is the comparative carbon footprint 👣 of plant-based diets vs meat-based diets globally 🌎?")
     st.markdown("The approach to this challenge involved the usage of various data sources to 1️⃣ first decide what the average consumption for an person looks like. 2️⃣ Second, compare the consumption of these foods to the carbon footprint of certain ingredients. 3️⃣ Finally, compare to the equivalent airplane travel routes for one passenger in economy class. _Please refer to \"Endnotes\" section below to see more details on sources and diets considered_")        
     annual_ghg_emissions_meatbased = calculate_carbon_footprint_meat()
     annual_ghg_emissions_plantbased = calculate_carbon_footprint_plant()
