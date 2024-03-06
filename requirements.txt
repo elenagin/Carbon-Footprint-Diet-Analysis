@@ -8,5 +8,4 @@ matplotlib
 streamlit-folium
 geopy
 altair
-math
 scikit-learn
