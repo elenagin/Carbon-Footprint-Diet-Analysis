@@ -404,7 +404,9 @@ with st.spinner(text="Loading..."):
 
         st.markdown("ℹ️ Trends suggest an increase in population and a high share of meat-based diets in future therefore it is important for us to find more sustainable solutions for diets in the future, whether they include meat or not. We need to keep developing tech and update our knowledge on climate friendly solutions 📆.")
         
-    with news:    
+    with news:  
+        st.subheader("Conclusion")
+        st.markdown("The detailed analysis and interactive features of the application highlight the significant environmental benefits of plant-based diets over meat-based diets. By providing users with compelling data visualizations and real-world analogies, such as the flight simulator, it emphasizes the impact of dietary choices on carbon footprints. The application not only educates users but also motivates them to consider more sustainable dietary practices, presenting a strong case for the adoption of diets that are both beneficial to health and the environment. Moreover, it signals the need for collective action and policy support to facilitate a global shift towards sustainable eating habits, addressing one of the critical challenges of our time—climate change.")       
         list_of_headlines = []
         news_headlines = scrape_nyt_news()
         st.subheader("📰 Keep up with climate change news!")
@@ -425,7 +427,7 @@ with st.spinner(text="Loading..."):
     
     st.markdown(" ")
     st.markdown(" ")
-    with endnotes:        
+    with endnotes:   
         st.header("📝 Endnotes and Data Sources")
         st.markdown("- Distance traveled by plane for one passenger in economy class, using the [ADEME](https://www.ademe.fr/en/frontpage/) emission factor of kilograms of carbon dioxide equivalent emitted per kilometer.")
         st.markdown("- Prediction for 2023 trend in animal protein intake was created using a Random Forest Regressor 🌳 based on the latest caloric data of fat, carbohydrates and vegetal protein.")
